@@ -59,17 +59,18 @@ def processing_log(filename,dict_cache, dict_tiger,debug):
 				if debug:
 					f_debug_tiger.write(result.group(0)+'\n')				
 	if debug:
+		print "number of entries in cache: ",i_count_cache," - tiger: ",i_count_tiger
 		f_debug_tiger.close()
 		f_debug_cache.close()
 		
 	f_current.close()
-	print "number of entries in cache: ",i_count_cache," - tiger: ",i_count_tiger
+	
 	
 #Main
 
 active_log="active.log"
 passive_log="passive.log"
-
+b_diff=0
 
 dict_cache_active=defaultdict(list)
 dict_tiger_active=defaultdict(list)
@@ -78,17 +79,99 @@ dict_cache_passive=defaultdict(list)
 dict_tiger_passive=defaultdict(list)
 
 
-print "Active Firewall processing"
+print "#Active Firewall"
 print
 processing_log(active_log,dict_cache_active,dict_tiger_active,0)
-print len(dict_cache_active), " Different MAC addresses in Cache"
-print len(dict_tiger_active), " Different MAC addresses in Tiger"
+print len(dict_cache_active), " Different MAC addresses in ARP Table"
+print len(dict_tiger_active), " Different MAC addresses in Tiger Table"
+
+# Invalid test as Tiger and Arp does not have similar MAC address notation
+#for t_key in dict_cache_active.keys():
+#	if t_key not in dict_tiger_active.keys():
+#for t_key in dict_tiger_active.keys():
+#	if t_key not in dict_cache_active.keys():
+#		print t_key, " not in arp table but in Tiger"	
+
 print
-print "Passive Firewall processsing"
+print "#Passive Firewall"
 print
 processing_log(passive_log,dict_cache_passive,dict_tiger_passive,0)
-print len(dict_cache_passive), " Different MAC addresses in Cache"
-print len(dict_tiger_passive), " Different MAC addresses in Tiger"
+print len(dict_cache_passive), " Different MAC addresses in ARP Tache"
+print len(dict_tiger_passive), " Different MAC addresses in Tiger Table"
 
+# Invalid test  as Tiger and Arp does not have similar MAC address notation
+#for t_key in dict_cache_passive.keys():
+#	if t_key not in dict_tiger_passive.keys():
+#		print t_key," not in Tiger but in arp table"
+#for t_key in dict_tiger_passive.keys():
+#	if t_key not in dict_cache_passive.keys():
+#		print t_key, " not in arp table but in Tiger"
 
-	
+print
+print "#Consistency Checks Between Active and Passive node"
+print
+print "ARP Tables:"
+print "==========="
+
+active_keys= dict_cache_active.keys()
+passive_keys= dict_cache_passive.keys()
+active_keys.sort()
+passive_keys.sort()
+
+# Check on Arp Tables sizes and differences
+if len(active_keys)==len(passive_keys):
+	print "ARP tables have same size"
+	if cmp(active_keys,passive_keys)==0:
+		print "ARP tables have identical MAC list"
+	else:
+		b_diff=1
+elif len(active_keys)>len(passive_keys):
+	print "ARP table on Active is bigger"
+	b_diff=1
+elif len(active_keys)<len(passive_keys):
+	print "ARP table on Passive is bigger"
+	b_diff=1
+
+if b_diff:
+	print "Entries not in Passive"	
+	for t_key in active_keys:
+		if t_key not in passive_keys:
+			print t_key," : ", dict_cache_active[t_key]
+	print "Entries not in Active"
+	for t_key in passive_keys:
+		if t_key not in active_keys:
+			print t_key," : ", dict_cache_passive[t_key]
+#---------------------------------------------------------------#
+b_diff=0
+print
+print "Tiger Tables:"
+print "============="
+active_keys= dict_tiger_active.keys()
+passive_keys= dict_tiger_passive.keys()
+active_keys.sort()
+passive_keys.sort()
+
+# Check Tiger Tables sizes and differences
+if len(active_keys)==len(passive_keys):
+	print "Tiger tables have same size"
+	if cmp(active_keys,passive_keys)==0:
+		print "Tiger tables have identical MAC list"
+	else:
+		b_diff=1
+elif len(active_keys)>len(passive_keys):
+	print "Tiger table on Active is bigger"
+	b_diff=1
+elif len(active_keys)<len(passive_keys):
+	print "Tiger table on Passive is bigger"
+	b_diff=1
+
+if b_diff:	
+	print "Entries not in Passive"	
+	for t_key in active_keys:
+		if t_key not in passive_keys:
+			print t_key," : ", dict_tiger_active[t_key]
+
+	print "Entries not in Active"
+	for t_key in passive_keys:
+			if t_key not in active_keys:
+				print t_key," : ", dict_tiger_passive[t_key]
