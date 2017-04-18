@@ -1,7 +1,7 @@
 # arpcache
 Checking arp table consistency between HA nodes
 
-
+**Prerequisite: Python 2.7.12**
 
 1. execute following commands on Active and Passive devices and log output in a single file:
 ```
